@@ -1,10 +1,11 @@
 package org.example.techiteasy.controllers;
 
+import org.example.techiteasy.exceptions.RecordNotFoundException;
 import org.example.techiteasy.models.Television;
-import org.springframework.http.ResponseEntity;
+import org.example.techiteasy.repositories.TelevisionRepository;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
+import java.util.List;
 
 /*
 Notities:
@@ -19,30 +20,61 @@ Notities:
 
 
 @RestController
-@RequestMapping("/televisions")
 public class TelevisionController {
 
-    private ArrayList<Television> televisions = new ArrayList<>();
-    ;
+    private final TelevisionRepository repository;
 
-    @GetMapping
-    public ResponseEntity<ArrayList<Television>> getAllTelevisions() {
-        return ResponseEntity.ok(televisions);
+    TelevisionController(TelevisionRepository repository) {
+        this.repository = repository;
     }
 
-    @PostMapping
-    public ResponseEntity<Television> createTelevision(@RequestBody Television television) {
-        televisions.add(television);
-        return ResponseEntity.created(null).body(television);
+    @GetMapping("/televisions")
+    List<Television> all() {
+        return repository.findAll();
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Television> updateTelevision(@PathVariable int id, @RequestBody Television updatedTelevision) {
-        if (id >= 0 && id < televisions.size()) {
-            televisions.set(id, updatedTelevision);
-            return ResponseEntity.ok(updatedTelevision);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    @PostMapping("/televisions")
+    Television newTelevision(@RequestBody Television newTelevision) {
+        return repository.save(newTelevision);
     }
+
+    @GetMapping("/televisions/{id}")
+    Television one(@PathVariable Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new RecordNotFoundException(id));
+    }
+
+    @PutMapping("/televisions/{id}")
+    Television replaceTelevision(@RequestBody Television newTelevision, @PathVariable Long id) {
+        return repository.findById(id)
+                .map(television -> {
+                    television.setType(newTelevision.getType());
+                    television.setBrand(newTelevision.getBrand());
+                    television.setPrice(newTelevision.getPrice());
+                    television.setAvailableSize(newTelevision.getAvailableSize());
+                    television.setRefreshRate(newTelevision.getRefreshRate());
+                    television.setScreenType(newTelevision.getScreenType());
+                    television.setScreenQuality(newTelevision.getScreenQuality());
+                    television.setSmartTv(newTelevision.getSmartTv());
+                    television.setWifi(newTelevision.getWifi());
+                    television.setVoiceControl(newTelevision.getVoiceControl());
+                    television.setHdr(newTelevision.getHdr());
+                    television.setBluetooth(newTelevision.getBluetooth());
+                    television.setAmbiLight(newTelevision.getAmbiLight());
+                    television.setOriginalStock(newTelevision.getOriginalStock());
+                    television.setSold(newTelevision.getSold());
+                    return repository.save(television);
+                })
+                .orElseGet(() -> {
+                    newTelevision.setId(id);
+                    return repository.save(newTelevision);
+                });
+    }
+
+    @DeleteMapping("television/{id}")
+    void deleteTelevision(@PathVariable Long id) {
+        repository.deleteById(id);
+    }
+
+
 }
