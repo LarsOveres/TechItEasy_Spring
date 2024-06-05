@@ -79,10 +79,13 @@ public class Television {
         this.sold = sold;
     }
 
-    // Getters en setters (geen setter voor id want die word automatisch gegenereerd)
 
     public Long getId() {
         return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getType() {
